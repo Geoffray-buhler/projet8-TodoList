@@ -15,7 +15,7 @@ class TaskController extends CoreController
      */
     public function listAction()
     {
-        return $this->render('task/list.html.twig', ['tasks' => $this->emi->getRepository(Task::class)->findAll()]);
+        return $this->render('task/list.html.twig', ['tasks' => $this->emi->getRepository(Task::class)->findBy(['user'=>$this->getUser()])]);
     }
 
     /**
@@ -74,8 +74,12 @@ class TaskController extends CoreController
         if ($this->getUser() === $task->getUser() || in_array('ROLE_ADMIN',$this->getUser()->getRoles())) {
             $task->toggle(!$task->isDone());
             $this->emi->flush();
-
-            $this->addFlash('success', sprintf('La tâche %s a bien été marquée comme faite.', $task->getTitle()));
+            if ($task->isDone()) {
+                $this->addFlash('success', sprintf('La tâche %s a bien été marquée comme faite.', $task->getTitle()));
+            }else{
+                $this->addFlash('success', sprintf('La tâche %s a bien été marquée comme non-faite.', $task->getTitle()));
+            }
+            
         }else{
             $this->addFlash('error', 'Vous ne pouver pas modifier cette tache.');
         }

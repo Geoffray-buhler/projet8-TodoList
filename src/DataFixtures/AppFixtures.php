@@ -23,8 +23,8 @@ class AppFixtures extends Fixture
         $hashedPassword = $this->hasher->hashPassword($user, 'test');
         $user->setPassword($hashedPassword);
         $user->setEmail('test@test.com');
+        
         $manager->persist($user);
-
         $manager->flush();
     }
 }

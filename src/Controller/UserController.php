@@ -59,7 +59,8 @@ class UserController extends CoreController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $password = $this->pswEncoder->hash($user, $user->getPassword());
+            
+            $password = $this->hasher->hashPassword($user, $user->getPassword());
             $user->setPassword($password);
 
             $this->emi->flush();

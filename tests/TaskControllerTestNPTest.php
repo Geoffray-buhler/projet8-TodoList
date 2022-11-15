@@ -93,8 +93,6 @@ class TaskControllerTestNPTest extends WebTestCase
 
         $crawler = $this->client->request('GET','/tasks');
 
-        $task = $taskRepository->findOneBy(['title'=>'Magnifique','content'=>'Ce test est magnifique !']); 
-
         $buttonCrawlerNode = $crawler->selectButton('Supprimer');
 
         $form = $buttonCrawlerNode->form();

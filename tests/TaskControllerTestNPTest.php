@@ -52,7 +52,7 @@ class TaskControllerTestNPTest extends WebTestCase
         }
     }
 
-    //Test de la creations d'une tasks si non connecté.
+    //Test de la creations d'une tasks.
     public function testCreateTasksIfNotConnected(): void
     {
 
@@ -106,6 +106,8 @@ class TaskControllerTestNPTest extends WebTestCase
         $this->assertSelectorTextContains('div.alert-success', 'La tâche a bien été supprimée.');
     }
 
+    //Jusqu'à la ok !
+
     //Test de la creations d'un utilisateur.
     public function testCreateUsersNotLogin(): void
     {
@@ -153,6 +155,7 @@ class TaskControllerTestNPTest extends WebTestCase
         $this->assertResponseRedirects('/users',302);
 
         $this->client->followRedirect();
+        
 
         $this->assertSelectorTextContains('div.alert-success', "L'utilisateur a bien été ajouté.");
     }

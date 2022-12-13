@@ -82,5 +82,78 @@ class TaskControllerTestNPTest extends WebTestCase
         $this->assertResponseRedirects('/tasks',302);
     }
 
+    //Test de suppression d'une tasks. (en admin)
+    public function testDeleteTasks(): void
+    {
+        $userRepository = $this->entityManager->getRepository(User::class);
+        $taskRepository = $this->entityManager->getRepository(Task::class);
+        
+        $userLogin = $userRepository->findOneBy(['username'=>'test']);
+        $this->client->loginUser($userLogin);
 
+        $crawler = $this->client->request('GET','/tasks');
+
+        $buttonCrawlerNode = $crawler->selectButton('Supprimer');
+
+        $form = $buttonCrawlerNode->form();
+
+        $this->client->submit($form);
+
+        $this->assertResponseRedirects('/tasks',302);
+
+        $this->client->followRedirect();
+
+        $this->assertSelectorTextContains('div.alert-success', 'La tâche a bien été supprimée.');
+    }
+
+    //Test de la creations d'un utilisateur.
+    public function testCreateUsersNotLogin(): void
+    {
+        $crawler = $this->client->request('GET','/users/create');
+
+        $buttonCrawlerNode = $crawler->selectButton('Ajouter');
+
+        $form = $buttonCrawlerNode->form();
+
+        $form['user[username]'] = 'testouille';
+        $form['user[password][first]'] = '123456';
+        $form['user[password][second]'] = '123456';
+        $form['user[email]'] = 'testouille@test.com';
+        
+        $this->client->submit($form);
+
+        $this->assertResponseRedirects('/users',302);
+
+        $this->client->followRedirect();
+
+        $this->assertSelectorTextContains('div.alert-danger', 'Vous ne pouvez pas créer un utilisateur.');
+    }
+
+    //Test de la creations d'un utilisateur.
+    public function testCreateUsersAdmin(): void
+    {
+        $userRepository = $this->entityManager->getRepository(User::class);
+        
+        $userLogin = $userRepository->findOneBy(['username'=>'admin']);
+        $this->client->loginUser($userLogin);
+
+        $crawler = $this->client->request('GET','/users/create');
+
+        $buttonCrawlerNode = $crawler->selectButton('Ajouter');
+
+        $form = $buttonCrawlerNode->form();
+
+        $form['user[username]'] = 'testouille';
+        $form['user[password][first]'] = '123456';
+        $form['user[password][second]'] = '123456';
+        $form['user[email]'] = 'testouille@test.com';
+        
+        $this->client->submit($form);
+
+        $this->assertResponseRedirects('/users',302);
+
+        $this->client->followRedirect();
+
+        $this->assertSelectorTextContains('div.alert-success', "L'utilisateur a bien été ajouté.");
+    }
 }

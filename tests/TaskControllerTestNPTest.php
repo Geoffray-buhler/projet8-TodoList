@@ -136,7 +136,7 @@ class TaskControllerTestNPTest extends WebTestCase
     {
         $userRepository = $this->entityManager->getRepository(User::class);
         
-        $userLogin = $userRepository->findOneBy(['username'=>'test']);
+        $userLogin = $userRepository->findOneBy(['username'=>'admin']);
         $this->client->loginUser($userLogin);
 
         $crawler = $this->client->request('GET','/users/create');
@@ -156,8 +156,6 @@ class TaskControllerTestNPTest extends WebTestCase
 
         $this->client->followRedirect();
 
-        // $this->assertSelectorTextContains('div.alert-danger', 'Vous ne pouvez pas créer un utilisateur.');
-
-        // $this->assertSelectorTextContains('div.alert-success', "L'utilisateur a bien été ajouté.");
+        $this->assertSelectorTextContains('div.alert-success', "L'utilisateur a bien été ajouté.");
     }
 }

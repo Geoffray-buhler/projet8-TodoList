@@ -155,6 +155,7 @@ class TaskControllerTestNPTest extends WebTestCase
         $this->assertResponseRedirects('/users',302);
 
         $this->client->followRedirect();
+        
 
         $this->assertSelectorTextContains('div.alert-success', "L'utilisateur a bien été ajouté.");
     }

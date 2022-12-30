@@ -15,7 +15,15 @@ class TaskController extends CoreController
      */
     public function listAction()
     {
-        return $this->render('task/list.html.twig', ['tasks' => $this->emi->getRepository(Task::class)->findBy(['user'=>$this->getUser()])]);
+        return $this->render('task/list.html.twig', ['tasks' => $this->emi->getRepository(Task::class)->findBy(['user'=>$this->getUser(),'isDone'=>false])]);
+    }
+
+    /**
+     * @Route("/tasksDone", name="task_list_done")
+     */
+    public function listActionDone()
+    {
+        return $this->render('task/list.html.twig', ['tasks' => $this->emi->getRepository(Task::class)->findBy(['user'=>$this->getUser(),'isDone'=>true])]);
     }
 
     /**

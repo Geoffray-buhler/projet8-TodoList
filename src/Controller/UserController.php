@@ -4,66 +4,96 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\UserType;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-class UserController extends CoreController
+class UserController extends AbstractController
 {
+    private $doctrine;
+    private $entityManager;
+
+    public function __construct(EntityManagerInterface $entityManager, ManagerRegistry $doctrine)
+
+    {
+        $this->entityManager = $entityManager;
+        $this->doctrine = $doctrine;
+    }
+
+
     /**
      * @Route("/users", name="user_list")
      */
     public function listAction()
     {
-        return $this->render('user/list.html.twig', ['users' => $this->emi->getRepository(User::class)->findAll()]);
+
+        if (!in_array('ROLE_ADMIN', $this->getUser()->getRoles())) {
+            return $this->redirectToRoute('redirect_nonAuthorised');
+        }
+        return $this->render('user/list.html.twig', ['users' => $this->doctrine->getRepository(User::class)->findAll()]);
     }
 
     /**
      * @Route("/users/create", name="user_create")
+     * @IsGranted("ROLE_ADMIN")
      */
-    public function createAction(Request $request): Response
+    public function createAction(Request $request, UserPasswordHasherInterface $passwordHasher)
     {
-        $user = new User();
+        $admin = $this->getUser();
+        if (!empty($admin)) {
 
-        $form = $this->createForm(UserType::class, $user);
-        $form->handleRequest($request);
+            if (in_array('ROLE_ADMIN', $admin->getRoles())) {
+                $user = new User();
+                
+                $form = $this->createForm(UserType::class, $user);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            if ($this->getUser() !== null && in_array('ROLE_ADMIN',$this->getUser()->getRoles())) {
-                $password = $this->pswEncoder->hashPassword($user, $user->getPassword());
-                
-                $user->setPassword($password);
-                
-                $this->emi->persist($user);
-                $this->emi->flush();
-                $this->addFlash('success', "L'utilisateur a bien été ajouté.");
-            }else{
-                $this->addFlash('error', "Vous ne pouvez pas créer un utilisateur.");
+                $form->handleRequest($request);
+
+                if ($form->isSubmitted() && $form->isValid()) {
+
+
+                    $hashedPassword = $passwordHasher->hashPassword(
+                        $user,
+                        $user->getPassword()
+                    );
+                    $user->setPassword($hashedPassword);
+                    
+                    $this->entityManager->persist($user);
+                    $this->entityManager->flush();
+
+                    $this->addFlash('success', "L'utilisateur a bien été ajouté.");
+
+                    return $this->redirectToRoute('user_list');
+                }
+            } else {
+                return $this->redirectToRoute('redirect_nonAuthorised');
             }
-
-            return $this->redirectToRoute('user_list');
-        
         }
 
         return $this->render('user/create.html.twig', ['form' => $form->createView()]);
-
     }
 
     /**
      * @Route("/users/{id}/edit", name="user_edit")
      */
-    public function editAction(User $user, Request $request)
+    public function editAction(User $user, Request $request, UserPasswordHasherInterface $passwordHasher)
     {
         $form = $this->createForm(UserType::class, $user);
 
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            
-            $password = $this->hasher->hashPassword($user, $user->getPassword());
-            $user->setPassword($password);
+            $hashedPassword = $passwordHasher->hashPassword(
+                $user,
+                $user->getPassword()
+            );
+            $user->setPassword($hashedPassword);
 
-            $this->emi->flush();
+            $this->entityManager->flush();
 
             $this->addFlash('success', "L'utilisateur a bien été modifié");
 
